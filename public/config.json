@@ -1,0 +1,23 @@
+{
+    "project": {
+        "name": "TradeBull",
+        "version": "1.0",
+        "website": "https://tradebull.com"
+    },
+    "supabase": {
+        "url": "https://xgrwsbjqeghsscjovgdj.supabase.co",
+        "publishable_key": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhncndzYmpxZWdoc3Njam92Z2RqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA3NjkzOTksImV4cCI6MjA2NjM0NTM5OX0.GrQ4Wm2DZ1ooVbzS6k0yjRc7O9rkwJoVEdpd_jCrbFc"
+    },
+    "features": {
+        "trading": true,
+        "nft_investments": true,
+        "referral_system": true,
+        "kyc_verification": true,
+        "daily_checkin": true
+    },
+    "ui": {
+        "theme_color": "rose",
+        "currency_symbol": "$",
+        "default_currency": "USD"
+    }
+}
