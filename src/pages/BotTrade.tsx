@@ -427,7 +427,7 @@ const BotTrade = () => {
     }
   });
 
-  // Close all active trades mutation using UTC time for consistency
+  // Close all active trades mutation using UTC time for consistency and proper bot_profit_type logic
   const closeAllTradesMutation = useMutation({
     mutationFn: async () => {
       if (!user) {
@@ -461,7 +461,7 @@ const BotTrade = () => {
         const timerMs = trade.trade_timer * 60 * 60 * 1000;
         const elapsedMs = currentUTC.getTime() - openTimeUTC.getTime();
         
-        // Only close trades that have ACTUALLY completed their timer (not just close to it)
+        // Only close trades that have ACTUALLY completed their timer
         if (elapsedMs >= timerMs) {
           // Get profit percentage from settings for this trade's timer
           let profitPercentage = trade.profit_percent || 10;
@@ -474,22 +474,27 @@ const BotTrade = () => {
             }
           }
 
-          // Determine win/lose based on bot_profit_type setting and randomness
+          // Use bot_profit_type setting from database to determine win/lose - NO RANDOMNESS
           let isWin = false;
           let actualTradeResult = '';
           
+          console.log(`Bot profit type setting: ${tradeSettings?.bot_profit_type}`);
+          
           if (tradeSettings?.bot_profit_type === 'profit') {
-            // If bot_profit_type is 'profit', 85% chance of winning
-            isWin = Math.random() > 0.15;
-            actualTradeResult = isWin ? 'profit' : 'lose';
+            // If bot_profit_type is 'profit', user always wins
+            isWin = true;
+            actualTradeResult = 'profit';
+            console.log('Bot setting is PROFIT - User will WIN');
           } else if (tradeSettings?.bot_profit_type === 'lose') {
-            // If bot_profit_type is 'lose', 15% chance of winning
-            isWin = Math.random() > 0.85;
-            actualTradeResult = isWin ? 'profit' : 'lose';
+            // If bot_profit_type is 'lose', user always loses
+            isWin = false;
+            actualTradeResult = 'lose';
+            console.log('Bot setting is LOSE - User will LOSE');
           } else {
-            // Default 50/50 chance
-            isWin = Math.random() > 0.5;
-            actualTradeResult = isWin ? 'profit' : 'lose';
+            // Fallback to profit if setting is unclear
+            isWin = true;
+            actualTradeResult = 'profit';
+            console.log('Bot setting unclear, defaulting to PROFIT');
           }
 
           // Calculate profit based on selected coins and settings
@@ -506,7 +511,7 @@ const BotTrade = () => {
             status: 'completed',
             close_time: currentUTC.toISOString(),
             profit_loss: finalProfit,
-            profit_or_lose: actualTradeResult, // Store the actual trade outcome, not the bot setting
+            profit_or_lose: actualTradeResult, // Store the actual trade outcome based on bot setting
             profit: finalProfit,
             return_amount: finalReturnAmount
           });
@@ -547,7 +552,7 @@ const BotTrade = () => {
         throw balanceError;
       }
 
-      console.log(`Trades closed using UTC time. Total return: $${totalReturns.toFixed(2)}, Total profit: $${totalProfit.toFixed(2)}`);
+      console.log(`Trades closed using database bot_profit_type setting. Total return: $${totalReturns.toFixed(2)}, Total profit: $${totalProfit.toFixed(2)}`);
 
       return data;
     },

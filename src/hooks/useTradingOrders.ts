@@ -6,6 +6,7 @@ import { supabase } from '../integrations/supabase/client';
 import { useTradeTransactions } from './useTradeTransactions';
 import { useUserBalance } from './useUserBalance';
 import { useCoinSettings } from './useCoinSettings';
+import { useTradeSettings } from './useTradeSettings';
 
 export const useTradingOrders = (coinSymbol: string) => {
   const [orders, setOrders] = useState<LiveOrder[]>([]);
@@ -13,6 +14,7 @@ export const useTradingOrders = (coinSymbol: string) => {
   const { createTradeTransaction } = useTradeTransactions();
   const { refreshBalance } = useUserBalance();
   const { coinSettings } = useCoinSettings(coinSymbol);
+  const { settings: tradeSettings } = useTradeSettings();
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const realtimeChannel = useRef<any>(null);
   const processedTradeIds = useRef<Set<string>>(new Set());
@@ -240,7 +242,7 @@ export const useTradingOrders = (coinSymbol: string) => {
 
   // Process expired trade using real market data
   const processExpiredTrade = async (order: LiveOrder) => {
-    if (!user || !coinSettings) return;
+    if (!user || !coinSettings || !tradeSettings) return;
 
     // Ensure we have valid profit/loss percentage from database
     if (coinSettings.profit_loss === null || coinSettings.profit_loss === undefined) {

@@ -1,11 +1,12 @@
-
 import { useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { getSupabaseClient } from '../integrations/supabase/client';
+import { useTradeSettings } from './useTradeSettings';
 
 // Hook to handle automatic trade closing when user is away
 export const useTradeAutoClose = () => {
   const { user } = useAuth();
+  const { settings: tradeSettings } = useTradeSettings();
 
   const fetchFreshPrice = async (symbol: string): Promise<number> => {
     try {
@@ -62,7 +63,7 @@ export const useTradeAutoClose = () => {
   };
 
   const processExpiredTrades = async () => {
-    if (!user) return;
+    if (!user || !tradeSettings) return;
 
     try {
       const supabase = await getSupabaseClient();
