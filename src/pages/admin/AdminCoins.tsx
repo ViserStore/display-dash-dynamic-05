@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -64,11 +65,9 @@ const AdminCoins = () => {
       switch (eventType) {
         case 'INSERT':
           console.log('Adding new coin:', newRecord);
-          // Add new coin at the beginning (most recent)
           return [newRecord, ...prevCoins];
         case 'UPDATE':
           console.log('Updating coin:', newRecord);
-          // Update coin in place, maintaining its position
           return prevCoins.map(coin => 
             coin.id === newRecord.id ? { ...newRecord } : coin
           );
@@ -85,6 +84,7 @@ const AdminCoins = () => {
     try {
       setLoading(true);
       console.log('Fetching coins from database...');
+      
       const { data, error } = await supabase
         .from('coins')
         .select('*')
@@ -92,6 +92,12 @@ const AdminCoins = () => {
 
       if (error) {
         console.error('Error fetching coins:', error);
+        // Don't throw error for empty results, just show empty state
+        if (error.code === 'PGRST116') {
+          console.log('No coins found in database');
+          setCoins([]);
+          return;
+        }
         throw error;
       }
       
@@ -99,7 +105,8 @@ const AdminCoins = () => {
       setCoins(data || []);
     } catch (error) {
       console.error('Error fetching coins:', error);
-      toast.error('Failed to fetch coins');
+      toast.error('Failed to fetch coins. Please check if the coins table exists.');
+      setCoins([]); // Set empty array on error
     } finally {
       setLoading(false);
     }
@@ -113,7 +120,6 @@ const AdminCoins = () => {
 
   const handleEditCoin = (coin: Coin) => {
     console.log('Opening modal for editing coin:', coin);
-    // Ensure we have the complete coin data
     setSelectedCoin({
       id: coin.id,
       symbol: coin.symbol,
@@ -207,7 +213,10 @@ const AdminCoins = () => {
               {coins.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={7} className="text-center text-rose-500 py-8">
-                    No coins found. Click "Add Coin" to create your first coin.
+                    <div className="flex flex-col items-center gap-2">
+                      <p>No coins found in the database.</p>
+                      <p className="text-sm text-gray-500">Click "Add Coin" to create your first coin or run the SQL migrations to populate sample data.</p>
+                    </div>
                   </TableCell>
                 </TableRow>
               ) : (
