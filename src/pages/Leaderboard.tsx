@@ -206,6 +206,10 @@ const Leaderboard = () => {
                   <div className="text-center text-gray-400 py-8">
                     Loading...
                   </div>
+                ) : users.length === 0 ? (
+                  <div className="text-center text-white mt-8">
+                    <p>No deposits found</p>
+                  </div>
                 ) : (
                   users.map((user) => (
                     <div key={user.id} className="_flex_lq8ol_19 _items-center_lq8ol_27 _gap-3_lq8ol_180 bg-gray-900 _px-2_lq8ol_10 _py-3_lq8ol_170 _rounded-[10px]_lq8ol_56">
@@ -234,12 +238,6 @@ const Leaderboard = () => {
                   ))
                 )}
               </div>
-
-              {!loading && users.length === 0 && (
-                <div className="text-center text-white mt-8">
-                  <p>No deposit data available yet.</p>
-                </div>
-              )}
             </div>
           </div>
         </div>
