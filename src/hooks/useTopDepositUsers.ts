@@ -32,7 +32,11 @@ export const useTopDepositUsers = () => {
 
       if (depositsError) {
         console.error('Error fetching deposits:', depositsError);
-        setError('Failed to fetch deposit data');
+        if (depositsError.code === 'PGRST200' || depositsError.message?.includes('relationship')) {
+          setError('Database fetch error');
+        } else {
+          setError('Failed to fetch deposit data');
+        }
         return;
       }
 
@@ -101,9 +105,13 @@ export const useTopDepositUsers = () => {
       console.log('Sorted top users:', sortedUsers);
       setUsers(sortedUsers);
       setError(null);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching top deposit users:', error);
-      setError('Failed to fetch top deposit users');
+      if (error?.code === 'PGRST200' || error?.message?.includes('relationship')) {
+        setError('Database fetch error');
+      } else {
+        setError('Failed to fetch top deposit users');
+      }
     } finally {
       setLoading(false);
     }
