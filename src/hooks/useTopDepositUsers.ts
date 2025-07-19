@@ -25,15 +25,7 @@ export const useTopDepositUsers = () => {
       // Try 'complete' status first (as seen in admin pages)
       const { data: depositsData, error: depositsError } = await supabase
         .from('deposits')
-        .select(`
-          user_id,
-          amount,
-          users!inner(
-            id,
-            username,
-            full_name
-          )
-        `)
+        .select('user_id, amount')
         .eq('status', 'complete');
 
       console.log('Deposits query result:', { depositsData, depositsError });
@@ -45,16 +37,7 @@ export const useTopDepositUsers = () => {
       }
 
       if (!depositsData || depositsData.length === 0) {
-        console.log('No completed deposits found, trying to fetch all deposits to check status values...');
-        
-        // Debug: Check what status values exist
-        const { data: allDeposits, error: allError } = await supabase
-          .from('deposits')
-          .select('status')
-          .limit(10);
-        
-        console.log('Available deposit statuses:', allDeposits?.map(d => d.status));
-        
+        console.log('No completed deposits found');
         setUsers([]);
         setError(null);
         return;
@@ -62,7 +45,6 @@ export const useTopDepositUsers = () => {
 
       // Group deposits by user and calculate totals
       const userDeposits = new Map<string, {
-        user: any;
         total: number;
       }>();
 
@@ -74,21 +56,41 @@ export const useTopDepositUsers = () => {
           userDeposits.get(userId)!.total += amount;
         } else {
           userDeposits.set(userId, {
-            user: deposit.users,
             total: amount
           });
         }
       });
 
+      // Get user details for users who have deposits
+      const userIds = Array.from(userDeposits.keys());
+      const { data: usersData, error: usersError } = await supabase
+        .from('users')
+        .select('id, username, full_name')
+        .in('id', userIds);
+
+      if (usersError) {
+        console.error('Error fetching users:', usersError);
+        setError('Failed to fetch user data');
+        return;
+      }
+
+      if (!usersData || usersData.length === 0) {
+        console.log('No users found for deposits');
+        setUsers([]);
+        setError(null);
+        return;
+      }
+
       // Convert to array and sort by total deposits
-      const sortedUsers = Array.from(userDeposits.entries())
-        .map(([userId, data]) => ({
-          id: userId,
-          username: data.user.username || 'Unknown',
-          full_name: data.user.full_name,
-          total_deposits: data.total,
+      const sortedUsers = usersData
+        .map((user) => ({
+          id: user.id,
+          username: user.username || 'Unknown',
+          full_name: user.full_name,
+          total_deposits: userDeposits.get(user.id)?.total || 0,
           rank: 0
         }))
+        .filter(user => user.total_deposits > 0)
         .sort((a, b) => b.total_deposits - a.total_deposits)
         .slice(0, 20) // Top 20 users only
         .map((user, index) => ({
